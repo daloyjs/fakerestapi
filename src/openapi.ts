@@ -275,7 +275,7 @@ export function buildOpenApi(): Record<string, any> {
       title: API_TITLE,
       description: API_DESCRIPTION,
       version: '1.0',
-      contact: { name: API_TITLE, url: 'https://github.com/' },
+      contact: { name: API_TITLE, url: 'https://daloyjs.dev/' },
     },
     tags,
     paths,
