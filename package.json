@@ -7,6 +7,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "vercel-build": "pnpm typecheck && pnpm build",
     "dev": "tsx watch scripts/serve.ts",
     "start": "tsx scripts/serve.ts",
     "smoke": "tsx scripts/smoke.ts",

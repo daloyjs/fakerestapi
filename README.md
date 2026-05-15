@@ -49,6 +49,23 @@ pnpm test
 pnpm dev                             # localhost:3000  -> Swagger UI at /index.html
 ```
 
+## Deploy to Vercel
+
+Use the `Other` framework preset. This repo is a Vercel Edge Function app, not
+a Next.js app.
+
+Recommended project settings:
+
+- Framework Preset: `Other`
+- Root Directory: `.`
+- Install Command: `pnpm install`
+- Build Command: `pnpm vercel-build`
+- Output Directory: leave empty
+- Node.js Version: `20.x` or newer
+
+The request routing is already configured in `vercel.json`, and the Edge
+handler lives in `api/index.ts`.
+
 ## Endpoints at a glance
 
 - `/api/v1/{Resource}` — list / create
