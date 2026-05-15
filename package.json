@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@daloyjs/core": "link:..",
+    "@daloyjs/core": "link:../daloy",
     "zod": "^4.0.0"
   },
   "devDependencies": {

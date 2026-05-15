@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@daloyjs/core':
-        specifier: link:..
-        version: link:..
+        specifier: link:../daloy
+        version: link:../daloy
       zod:
         specifier: ^4.0.0
         version: 4.4.3

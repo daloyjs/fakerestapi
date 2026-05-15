@@ -1,7 +1,7 @@
 /**
  * DaloyJS port of the FakeRESTApi reference server.
  *
- * Same ~700 endpoints as `honojs-large-fakerestapi`, expressed with DaloyJS
+ * Same ~700 endpoints as `daloyjs-large-fakerestapi`, expressed with DaloyJS
  * idioms:
  *
  *  - `App` constructed with `bodyLimitBytes` + `requestTimeoutMs` (secure
@@ -43,7 +43,7 @@ import {
 } from "./openapi.js";
 import { yamlDump } from "./yaml.js";
 
-// ---------- Collection query helpers (parity with the Hono reference) ----------
+// ---------- Collection query helpers (parity with the Daloy reference) ----------
 
 const QUERY_CONTROL_KEYS = new Set([
   "page",
@@ -56,27 +56,27 @@ const QUERY_CONTROL_KEYS = new Set([
   "fields",
 ]);
 
-const HONO_NOT_FOUND_BODY = {
+const DALOYNOT_FOUND_BODY = {
   type: "https://tools.ietf.org/html/rfc7231#section-6.5.4",
   title: "Not Found",
   status: 404,
 };
-const HONO_CORS_EXPOSE_HEADERS = "X-Total-Count,X-Page,X-Limit,X-Offset";
-const HONO_CORS_ALLOW_METHODS = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
-const HONO_CORS_ALLOW_HEADERS = "Content-Type,Authorization";
+const DALOYCORS_EXPOSE_HEADERS = "X-Total-Count,X-Page,X-Limit,X-Offset";
+const DALOYCORS_ALLOW_METHODS = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
+const DALOYCORS_ALLOW_HEADERS = "Content-Type,Authorization";
 
-function honoNotFoundJson(): {
+function daloyNotFoundJson(): {
   status: 404;
-  body: typeof HONO_NOT_FOUND_BODY;
+  body: typeof DALOYNOT_FOUND_BODY;
   headers: Record<string, string>;
 } {
   return {
     status: 404,
-    body: HONO_NOT_FOUND_BODY,
+    body: DALOYNOT_FOUND_BODY,
     headers: {
       "content-type": "application/json",
       "access-control-allow-origin": "*",
-      "access-control-expose-headers": HONO_CORS_EXPOSE_HEADERS,
+      "access-control-expose-headers": DALOYCORS_EXPOSE_HEADERS,
     },
   };
 }
@@ -303,7 +303,7 @@ function resourcePlugin(def: ResourceDef): { name: string; register: (app: App) 
         },
         handler: async ({ params }) => {
           const item = getById(def, Number((params as { id: string }).id));
-          if (!item) return honoNotFoundJson();
+          if (!item) return daloyNotFoundJson();
           return { status: 200 as const, body: item };
         },
       });
@@ -500,7 +500,7 @@ const relationshipsPlugin = {
         handler: async ({ params, request, set }) => {
           const id = Number((params as { id: string }).id);
           const parent = getById(resourceNamed(route.parentResource), id);
-          if (!parent) return honoNotFoundJson();
+          if (!parent) return daloyNotFoundJson();
 
           let items: Sample[];
           if (route.kind === "fromParent") {
@@ -537,7 +537,7 @@ const relationshipsPlugin = {
         handler: async ({ params, request, set }) => {
           const id = Number((params as { id: string }).id);
           const parent = getById(resourceNamed(r.parentResource), id);
-          if (!parent) return honoNotFoundJson();
+          if (!parent) return daloyNotFoundJson();
           const target = resourceNamed(r.targetResource);
           const all = listFor(target) as Array<Sample & Record<string, unknown>>;
           const items = all.filter((item) => item[r.foreignKey] === id);
@@ -704,7 +704,7 @@ export function buildApp(): App {
             headers: {
               "content-type": "text/plain; charset=UTF-8",
               "access-control-allow-origin": "*",
-              "access-control-expose-headers": HONO_CORS_EXPOSE_HEADERS,
+              "access-control-expose-headers": DALOYCORS_EXPOSE_HEADERS,
             },
           });
         }
@@ -731,16 +731,16 @@ export function buildApp(): App {
   app.use({
     beforeHandle(ctx) {
       ctx.set.headers.set("access-control-allow-origin", "*");
-      ctx.set.headers.set("access-control-expose-headers", HONO_CORS_EXPOSE_HEADERS);
+      ctx.set.headers.set("access-control-expose-headers", DALOYCORS_EXPOSE_HEADERS);
       return undefined;
     },
     onResponse(response) {
       response.headers.delete("x-request-id");
       response.headers.set("access-control-allow-origin", "*");
-      response.headers.set("access-control-expose-headers", HONO_CORS_EXPOSE_HEADERS);
+      response.headers.set("access-control-expose-headers", DALOYCORS_EXPOSE_HEADERS);
       if (response.status === 204 && response.headers.has("access-control-allow-methods")) {
-        response.headers.set("access-control-allow-methods", HONO_CORS_ALLOW_METHODS);
-        response.headers.set("access-control-allow-headers", HONO_CORS_ALLOW_HEADERS);
+        response.headers.set("access-control-allow-methods", DALOYCORS_ALLOW_METHODS);
+        response.headers.set("access-control-allow-headers", DALOYCORS_ALLOW_HEADERS);
         response.headers.set("vary", "Access-Control-Request-Headers");
       }
     },

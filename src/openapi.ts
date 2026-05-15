@@ -7,7 +7,7 @@ import { enrichSample } from './relationships.js';
 
 type Schema = Record<string, any>;
 
-export const API_TITLE = 'FakeRESTApi.Hono.V1';
+export const API_TITLE = 'FakeRESTApi.DaloyJS.V1';
 export const API_DESCRIPTION =
   'A seeded mock API for testing integrations, frontends, and SDKs. It offers a wide catalog of resources, deterministic responses, and relationship-rich sample data. Write operations return realistic payloads without persisting changes.';
 

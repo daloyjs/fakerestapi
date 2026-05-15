@@ -1,6 +1,6 @@
-# daloyjs-large-fakerestapi
+# daloyjs fakerestapi
 
-A line-for-line port of [`honojs-large-fakerestapi`](../honojs-large-fakerestapi) that swaps Hono for **DaloyJS** to demonstrate the framework's
+A 
 contract-first ergonomics on a non-trivial surface (~700 endpoints across 100+
 resources). Same routes, same payloads, same OpenAPI/Swagger UI surface — built
 with [`@daloyjs/core`](../README.md).
@@ -37,7 +37,7 @@ scripts/
   check-headers.ts        # Header introspection
   dump-yaml.ts            # Dumps swagger.yaml to stdout
 test/
-  api.test.ts             # ~12 tests, mirror of the Hono port
+  api.test.ts             # ~12 tests, mirror of the Daloy port
 ```
 
 ## Develop
@@ -48,14 +48,14 @@ pnpm install                         # install daloy framework deps + build dist
 pnpm build
 
 cd daloyjs-large-fakerestapi
-pnpm install                         # link @daloyjs/core (file:..) + dev deps
+pnpm install                         # link @daloyjs/core from ../daloy + dev deps
 pnpm typecheck
 pnpm test
 pnpm dev                             # localhost:3000  -> Swagger UI at /index.html
 ```
 
-`@daloyjs/core` is consumed via `link:..` against the parent monorepo, so any
-local change to the framework is picked up after `pnpm build` at the root.
+`@daloyjs/core` is consumed via `link:../daloy`, so local framework changes are
+picked up after `pnpm build` in the sibling `daloy/` repo.
 
 ## Endpoints at a glance
 
@@ -71,7 +71,7 @@ Mutations are **not persisted**; every GET is deterministic.
 
 ## Why this matters
 
-The port keeps every test from the Hono version *unchanged*. The only thing
+The port keeps every test from the Daloy version *unchanged*. The only thing
 that moved is the framework: routes are now defined with `app.route({ ... })`,
 plugins are registered with `app.register(..., { prefix, tags })`, and 404s
 flow through `NotFoundError` so they automatically render as RFC 9457
