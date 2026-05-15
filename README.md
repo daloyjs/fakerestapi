@@ -43,19 +43,11 @@ test/
 ## Develop
 
 ```bash
-# From the daloy/ repo root:
-pnpm install                         # install daloy framework deps + build dist
-pnpm build
-
-cd daloyjs-large-fakerestapi
-pnpm install                         # link @daloyjs/core from ../daloy + dev deps
+pnpm install                         # install @daloyjs/core from npm + dev deps
 pnpm typecheck
 pnpm test
 pnpm dev                             # localhost:3000  -> Swagger UI at /index.html
 ```
-
-`@daloyjs/core` is consumed via `link:../daloy`, so local framework changes are
-picked up after `pnpm build` in the sibling `daloy/` repo.
 
 ## Endpoints at a glance
 
