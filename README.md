@@ -1,0 +1,78 @@
+# daloyjs-large-fakerestapi
+
+A line-for-line port of [`honojs-large-fakerestapi`](../honojs-large-fakerestapi) that swaps Hono for **DaloyJS** to demonstrate the framework's
+contract-first ergonomics on a non-trivial surface (~700 endpoints across 100+
+resources). Same routes, same payloads, same OpenAPI/Swagger UI surface — built
+with [`@daloyjs/core`](../README.md).
+
+## What this port shows
+
+| Capability                              | DaloyJS API used                              |
+| --------------------------------------- | --------------------------------------------- |
+| One App with secure defaults            | `new App({ bodyLimitBytes, requestTimeoutMs })` |
+| Helmet-grade headers + request id       | `app.use(secureHeaders())`, `app.use(requestId())` |
+| CORS with case-preserved exposed headers| `app.use(cors({ origin, exposedHeaders }))`   |
+| Encapsulated plugin per resource        | `app.register(resourcePlugin(def), { prefix, tags })` |
+| RFC 9457 problem+json on 404            | `throw new NotFoundError()`                   |
+| Custom response headers per route       | `return { status, body, headers }`            |
+| Single in-process test client           | `app.request(path, init)`                     |
+| Multi-runtime adapters                  | `serve(app, ...)` (Node), `toEdgeHandler(app)` (Vercel Edge) |
+
+## Layout
+
+```
+src/
+  app.ts                  # DaloyJS App factory: middleware + plugins
+  index.ts                # Default app instance (re-exports buildApp())
+  resources.ts            # Catalog of 100+ deterministic resources
+  relationships.ts        # Nested-object enrichment (parent-child graphs)
+  relationship-routes.ts  # Cross-resource relationship endpoint manifest
+  openapi.ts              # OpenAPI 3 document generator
+  yaml.ts                 # Tiny dependency-free YAML serializer
+api/
+  index.ts                # Vercel Edge handler
+scripts/
+  serve.ts                # Node server entrypoint
+  smoke.ts                # Manual smoke check
+  check-headers.ts        # Header introspection
+  dump-yaml.ts            # Dumps swagger.yaml to stdout
+test/
+  api.test.ts             # ~12 tests, mirror of the Hono port
+```
+
+## Develop
+
+```bash
+# From the daloy/ repo root:
+pnpm install                         # install daloy framework deps + build dist
+pnpm build
+
+cd daloyjs-large-fakerestapi
+pnpm install                         # link @daloyjs/core (file:..) + dev deps
+pnpm typecheck
+pnpm test
+pnpm dev                             # localhost:3000  -> Swagger UI at /index.html
+```
+
+`@daloyjs/core` is consumed via `link:..` against the parent monorepo, so any
+local change to the framework is picked up after `pnpm build` at the root.
+
+## Endpoints at a glance
+
+- `/api/v1/{Resource}` — list / create
+- `/api/v1/{Resource}/{id}` — get / put / patch / delete
+- `/api/v1/{Parent}/{id}/{relation}` — relationship traversals
+- `/api/v1/Authors/authors/books/{idBook}` and `/api/v1/CoverPhotos/books/covers/{idBook}` — fakerestapi parity routes
+- `/swagger/v1/swagger.json` and `/swagger/v1/swagger.yaml` — generated OpenAPI 3
+- `/index.html` — Swagger UI (served via inline HTML, loads from unpkg)
+- `/api/v1/_meta` — service metadata + endpoint count
+
+Mutations are **not persisted**; every GET is deterministic.
+
+## Why this matters
+
+The port keeps every test from the Hono version *unchanged*. The only thing
+that moved is the framework: routes are now defined with `app.route({ ... })`,
+plugins are registered with `app.register(..., { prefix, tags })`, and 404s
+flow through `NotFoundError` so they automatically render as RFC 9457
+problem+json with the configured request id stamped on every response.
