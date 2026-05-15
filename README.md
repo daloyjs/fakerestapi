@@ -60,11 +60,11 @@ Recommended project settings:
 - Root Directory: `.`
 - Install Command: `pnpm install`
 - Build Command: `pnpm vercel-build`
-- Output Directory: leave empty
+- Output Directory: `public`
 - Node.js Version: `20.x` or newer
 
-The request routing is already configured in `vercel.json`, and the Edge
-handler lives in `api/index.ts`.
+The request routing and empty static output directory are already configured in
+`vercel.json`, and the Edge handler lives in `api/index.ts`.
 
 ## Endpoints at a glance
 
