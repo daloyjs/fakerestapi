@@ -16,7 +16,7 @@ with [`@daloyjs/core`](../README.md).
 | RFC 9457 problem+json on 404            | `throw new NotFoundError()`                   |
 | Custom response headers per route       | `return { status, body, headers }`            |
 | Single in-process test client           | `app.request(path, init)`                     |
-| Multi-runtime adapters                  | `serve(app, ...)` (Node), `toEdgeHandler(app)` (Vercel Edge) |
+| Multi-runtime adapters                  | `serve(app, ...)` (Node), `toFetchHandler(app)` (Vercel Functions) |
 
 ## Layout
 
@@ -30,7 +30,7 @@ src/
   openapi.ts              # OpenAPI 3 document generator
   yaml.ts                 # Tiny dependency-free YAML serializer
 api/
-  index.ts                # Vercel Edge handler
+  index.ts                # Vercel Node Function handler
 scripts/
   serve.ts                # Node server entrypoint
   smoke.ts                # Manual smoke check
@@ -51,7 +51,7 @@ pnpm dev                             # localhost:3000  -> Scalar docs at /docs
 
 ## Deploy to Vercel
 
-Use the `Other` framework preset. This repo is a Vercel Edge Function app, not
+Use the `Other` framework preset. This repo deploys a Vercel Node Function, not
 a Next.js app.
 
 Recommended project settings:
@@ -61,10 +61,10 @@ Recommended project settings:
 - Install Command: `pnpm install`
 - Build Command: `pnpm vercel-build`
 - Output Directory: `public`
-- Node.js Version: `20.x` or newer
+- Node.js Version: `24.x` or newer
 
 The request routing and empty static output directory are already configured in
-`vercel.json`, and the Edge handler lives in `api/index.ts`.
+`vercel.json`, and the function entrypoint lives in `api/index.ts`.
 
 ## Endpoints at a glance
 

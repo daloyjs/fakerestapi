@@ -27,6 +27,7 @@ export function buildApp(options: { env?: "development" | "production" | "test" 
     title: API_TITLE,
     version: "1.0",
     ...(options.env ? { env: options.env } : {}),
+    trustProxy: true,
     bodyLimitBytes: 1024 * 1024,
     requestTimeoutMs: 30_000,
     validateResponses: true,
