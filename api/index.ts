@@ -1,6 +1,4 @@
-import { toEdgeHandler } from "@daloyjs/core/vercel";
+import { toFetchHandler } from "@daloyjs/core/vercel";
 import app from "../src/index.js";
 
-export const config = { runtime: "edge" };
-
-export default toEdgeHandler(app);
+export default toFetchHandler(app);
