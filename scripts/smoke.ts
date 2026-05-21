@@ -7,7 +7,7 @@ async function req(path: string, init?: RequestInit): Promise<Response> {
 const meta = await (await req("/api/v1/_meta")).json();
 console.log("META:", meta);
 
-const yaml = await (await req("/swagger/v1/swagger.yaml")).text();
+const yaml = await (await req("/openapi.yaml")).text();
 console.log("YAML bytes:", yaml.length);
 console.log("YAML head:\n" + yaml.slice(0, 500));
 
@@ -38,5 +38,5 @@ console.log("POST status:", post.status, "body:", await post.json());
 const nf = await req("/api/v1/Cars/9999");
 console.log("NotFound status:", nf.status);
 
-const json = await (await req("/swagger/v1/swagger.json")).json();
+const json = await (await req("/openapi.json")).json();
 console.log("Total path entries:", Object.keys(json.paths).length);

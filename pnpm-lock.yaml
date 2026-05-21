@@ -9,18 +9,18 @@ importers:
   .:
     dependencies:
       '@daloyjs/core':
-        specifier: ^0.9.1
-        version: 0.9.1
+        specifier: ^0.32.0
+        version: 0.32.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
       '@types/node':
-        specifier: ^25.8.0
-        version: 25.8.0
+        specifier: ^25.9.1
+        version: 25.9.1
       tsx:
-        specifier: ^4.22.0
-        version: 4.22.0
+        specifier: ^4.22.3
+        version: 4.22.3
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -30,9 +30,9 @@ importers:
 
 packages:
 
-  '@daloyjs/core@0.9.1':
-    resolution: {integrity: sha512-2+N5WpD2POM1Qu9c1Yt5ALiBBah6ZAZno/mK8ee2+rf8SX4s/73/S/3DxJoCx+HGvg7S7ytoRmo8KuxSf8dx/Q==}
-    engines: {node: '>=24.15.0', pnpm: '>=11.0.0'}
+  '@daloyjs/core@0.32.0':
+    resolution: {integrity: sha512-IeYqNbCRFXziFHHBzTiY+Gs9NDQ0tQOXh8SSATkt0PodVng8EqsotJihl7sdLysGA+FPYvm444TKZOKoypxWnQ==}
+    engines: {node: '>=24.0.0', pnpm: '>=11.0.0'}
     hasBin: true
 
   '@esbuild/aix-ppc64@0.28.0':
@@ -191,8 +191,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@types/node@25.8.0':
-    resolution: {integrity: sha512-TCFSk8IZh+iLX1xtksoBVtdmgL+1IX0fC9BeU4QqFSuNdN/K+HUlhqOzEmSYYpZUVsLYcPqc9KX+60iDuninSQ==}
+  '@types/node@25.9.1':
+    resolution: {integrity: sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg==}
 
   esbuild@0.28.0:
     resolution: {integrity: sha512-sNR9MHpXSUV/XB4zmsFKN+QgVG82Cc7+/aaxJ8Adi8hyOac+EXptIp45QBPaVyX3N70664wRbTcLTOemCAnyqw==}
@@ -204,8 +204,8 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  tsx@4.22.0:
-    resolution: {integrity: sha512-8ccZMPD69s1AbKXx0C5ddTNZfNjwV04iIKgjZmKfKxMynEtSYcK0Lh7iQFh53fI5Yu4pb9usgAiqyPmEONaALg==}
+  tsx@4.22.3:
+    resolution: {integrity: sha512-mdoNxBC/cSQObGGVQ5Bpn5i+yv7j68gk3Nfm3wFjcJg3Z0Mix9jzAFfP12prmm5eVGmDKtp0yyArrs0Q+8gZHg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -227,7 +227,7 @@ packages:
 
 snapshots:
 
-  '@daloyjs/core@0.9.1': {}
+  '@daloyjs/core@0.32.0': {}
 
   '@esbuild/aix-ppc64@0.28.0':
     optional: true
@@ -307,7 +307,7 @@ snapshots:
   '@esbuild/win32-x64@0.28.0':
     optional: true
 
-  '@types/node@25.8.0':
+  '@types/node@25.9.1':
     dependencies:
       undici-types: 7.24.6
 
@@ -343,7 +343,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  tsx@4.22.0:
+  tsx@4.22.3:
     dependencies:
       esbuild: 0.28.0
     optionalDependencies:

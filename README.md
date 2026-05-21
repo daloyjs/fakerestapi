@@ -46,7 +46,7 @@ test/
 pnpm install                         # install @daloyjs/core from npm + dev deps
 pnpm typecheck
 pnpm test
-pnpm dev                             # localhost:3000  -> Swagger UI at /index.html
+pnpm dev                             # localhost:3000  -> Scalar docs at /docs
 ```
 
 ## Deploy to Vercel
@@ -72,8 +72,8 @@ The request routing and empty static output directory are already configured in
 - `/api/v1/{Resource}/{id}` — get / put / patch / delete
 - `/api/v1/{Parent}/{id}/{relation}` — relationship traversals
 - `/api/v1/Authors/authors/books/{idBook}` and `/api/v1/CoverPhotos/books/covers/{idBook}` — fakerestapi parity routes
-- `/swagger/v1/swagger.json` and `/swagger/v1/swagger.yaml` — generated OpenAPI 3
-- `/index.html` — Swagger UI (served via inline HTML, loads from unpkg)
+- `/openapi.json` and `/openapi.yaml` — generated OpenAPI 3
+- `/docs` — Scalar API reference UI
 - `/api/v1/_meta` — service metadata + endpoint count
 
 Mutations are **not persisted**; every GET is deterministic.

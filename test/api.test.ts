@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parse as parseYaml } from 'yaml';
 
+import { buildApp } from '../src/app.js';
 import { API_TITLE, buildOpenApi, endpointCount } from '../src/openapi.js';
 import { RESOURCES, seededCountFor } from '../src/resources.js';
 import app from '../src/index.js';
@@ -23,23 +24,38 @@ test('meta endpoint reports resource and endpoint totals from the generated Open
   assert.equal(meta.version, '1.0');
   assert.equal(meta.resources, RESOURCES.length);
   assert.equal(meta.endpointCount, endpointCount(doc));
-  assert.deepEqual(meta.swagger, {
-    json: '/swagger/v1/swagger.json',
-    yaml: '/swagger/v1/swagger.yaml',
-    ui: '/index.html',
+  assert.deepEqual(meta.docs, {
+    json: '/openapi.json',
+    yaml: '/openapi.yaml',
+    ui: '/docs',
+    format: 'scalar',
   });
 });
 
-test('root redirects to the Swagger UI and index.html serves the UI shell', async () => {
+test('root redirects to Scalar docs and /docs serves the API reference shell', async () => {
   const redirect = await request('/');
   assert.equal(redirect.status, 302);
-  assert.equal(redirect.headers.get('location'), '/index.html');
+  assert.equal(redirect.headers.get('location'), '/docs');
 
-  const ui = await request('/index.html');
+  const ui = await request('/docs');
   const html = await ui.text();
   assert.equal(ui.status, 200);
-  assert.match(html, /SwaggerUIBundle/);
-  assert.match(html, /swagger\/v1\/swagger\.json/);
+  assert.match(html, /api-reference/);
+  assert.match(html, /openapi\.json/);
+});
+
+test('legacy Swagger paths redirect to the canonical Scalar and OpenAPI routes', async () => {
+  const indexRedirect = await request('/index.html');
+  assert.equal(indexRedirect.status, 302);
+  assert.equal(indexRedirect.headers.get('location'), '/docs');
+
+  const jsonRedirect = await request('/swagger/v1/swagger.json');
+  assert.equal(jsonRedirect.status, 302);
+  assert.equal(jsonRedirect.headers.get('location'), '/openapi.json');
+
+  const yamlRedirect = await request('/swagger/v1/swagger.yaml');
+  assert.equal(yamlRedirect.status, 302);
+  assert.equal(yamlRedirect.headers.get('location'), '/openapi.yaml');
 });
 
 test('api responses include browser CORS headers', async () => {
@@ -48,7 +64,7 @@ test('api responses include browser CORS headers', async () => {
   });
 
   assert.equal(response.status, 200);
-  assert.equal(response.headers.get('access-control-allow-origin'), '*');
+  assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
   assert.match(response.headers.get('access-control-expose-headers') ?? '', /X-Total-Count/);
 });
 
@@ -63,9 +79,13 @@ test('api supports CORS preflight requests', async () => {
   });
 
   assert.equal(response.status, 204);
-  assert.equal(response.headers.get('access-control-allow-origin'), '*');
+  assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
   assert.match(response.headers.get('access-control-allow-methods') ?? '', /GET/);
   assert.match(response.headers.get('access-control-allow-headers') ?? '', /Content-Type/);
+});
+
+test('buildApp still boots in production with the public CORS policy', () => {
+  assert.doesNotThrow(() => buildApp({ env: 'production' }));
 });
 
 test('all resources expose collection and item GET endpoints', async (t) => {
@@ -284,8 +304,8 @@ test('relationship traversal endpoints stay aligned with embedded relationship p
   assert.deepEqual(projectTasks, project.tasks);
 });
 
-test('swagger json exposes the generated API surface including relationship paths', async () => {
-  const swagger = await requestJson('/swagger/v1/swagger.json');
+test('openapi json exposes the generated API surface including relationship paths', async () => {
+  const swagger = await requestJson('/openapi.json');
 
   assert.equal(swagger.openapi, '3.0.3');
   assert.equal(Object.keys(swagger.components.schemas).length, RESOURCES.length);
@@ -439,15 +459,15 @@ test('expanded relationship endpoints are functional across domains', async () =
   assert.equal(loyaltyTransactions[0].accountId, 1);
 });
 
-test('swagger yaml is served inline and parses to the same API surface as swagger json', async () => {
-  const yamlResponse = await request('/swagger/v1/swagger.yaml');
+test('openapi yaml is served inline and parses to the same API surface as openapi json', async () => {
+  const yamlResponse = await request('/openapi.yaml');
   const yamlText = await yamlResponse.text();
   const yamlDoc = parseYaml(yamlText) as Record<string, any>;
-  const jsonDoc = await requestJson('/swagger/v1/swagger.json');
+  const jsonDoc = await requestJson('/openapi.json');
 
   assert.equal(yamlResponse.status, 200);
   assert.equal(yamlResponse.headers.get('content-type'), 'text/yaml; charset=utf-8');
-  assert.equal(yamlResponse.headers.get('content-disposition'), 'inline; filename="swagger.yaml"');
+  assert.equal(yamlResponse.headers.get('content-disposition'), 'inline; filename="openapi.yaml"');
   assert.equal(yamlResponse.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(yamlDoc.openapi, jsonDoc.openapi);
   assert.equal(Object.keys(yamlDoc.paths).length, Object.keys(jsonDoc.paths).length);

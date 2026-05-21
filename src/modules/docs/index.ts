@@ -1,33 +1,21 @@
 import type { App } from "@daloyjs/core";
+import { docsContentSecurityPolicy, scalarHtml } from "@daloyjs/core/docs";
 
 import { API_TITLE, buildOpenApi, endpointCount } from "../../openapi.js";
 import { RESOURCES } from "../../resources.js";
 import { yamlDump } from "../../yaml.js";
 
-const SWAGGER_UI_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>${API_TITLE} - API Docs</title>
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
-  <style> body { margin: 0; } </style>
-</head>
-<body>
-  <div id="swagger-ui"></div>
-  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js" crossorigin></script>
-  <script>
-    window.onload = () => {
-      window.ui = SwaggerUIBundle({
-        url: '/swagger/v1/swagger.json',
-        dom_id: '#swagger-ui',
-        deepLinking: true,
-        presets: [SwaggerUIBundle.presets.apis],
-        layout: 'BaseLayout',
-      });
-    };
-  </script>
-</body>
-</html>`;
+const OPENAPI_JSON_PATH = "/openapi.json";
+const OPENAPI_YAML_PATH = "/openapi.yaml";
+const DOCS_PATH = "/docs";
+
+function redirect(location: string) {
+  return {
+    status: 302 as const,
+    body: null,
+    headers: { location },
+  };
+}
 
 export function docsModule() {
   let cachedDoc: Record<string, unknown> | null = null;
@@ -40,8 +28,8 @@ export function docsModule() {
     register(api: App) {
       api.route({
         method: "GET",
-        path: "/swagger/v1/swagger.json",
-        operationId: "getSwaggerJson",
+        path: OPENAPI_JSON_PATH,
+        operationId: "getOpenApiJson",
         tags: ["Meta"],
         summary: "OpenAPI 3 specification",
         responses: { 200: { description: "Success" } },
@@ -50,8 +38,8 @@ export function docsModule() {
 
       api.route({
         method: "GET",
-        path: "/swagger/v1/swagger.yaml",
-        operationId: "getSwaggerYaml",
+        path: OPENAPI_YAML_PATH,
+        operationId: "getOpenApiYaml",
         tags: ["Meta"],
         summary: "OpenAPI 3 specification (YAML)",
         responses: { 200: { description: "Success" } },
@@ -60,7 +48,7 @@ export function docsModule() {
           body: getYaml(),
           headers: {
             "content-type": "text/yaml; charset=utf-8",
-            "content-disposition": 'inline; filename="swagger.yaml"',
+            "content-disposition": 'inline; filename="openapi.yaml"',
             "x-content-type-options": "nosniff",
           },
         }),
@@ -68,16 +56,22 @@ export function docsModule() {
 
       api.route({
         method: "GET",
-        path: "/index.html",
-        operationId: "getSwaggerUi",
+        path: DOCS_PATH,
+        operationId: "getScalarDocs",
         tags: ["Meta"],
-        summary: "Swagger UI shell",
+        summary: "Scalar API reference",
         responses: { 200: { description: "Success" } },
         handler: async () => ({
           status: 200 as const,
-          body: SWAGGER_UI_HTML,
+          body: scalarHtml({
+            specUrl: OPENAPI_JSON_PATH,
+            title: `${API_TITLE} - API Reference`,
+          }),
           headers: {
-            "content-type": "text/html; charset=UTF-8",
+            "content-type": "text/html; charset=utf-8",
+            "content-security-policy": docsContentSecurityPolicy(),
+            "x-content-type-options": "nosniff",
+            "referrer-policy": "no-referrer",
           },
         }),
       });
@@ -85,15 +79,41 @@ export function docsModule() {
       api.route({
         method: "GET",
         path: "/",
-        operationId: "redirectToSwaggerUi",
+        operationId: "redirectToDocs",
         tags: ["Meta"],
-        summary: "Redirect to Swagger UI",
+        summary: "Redirect to Scalar API reference",
         responses: { 302: { description: "Redirect" } },
-        handler: async () => ({
-          status: 302 as const,
-          body: null,
-          headers: { location: "/index.html" },
-        }),
+        handler: async () => redirect(DOCS_PATH),
+      });
+
+      api.route({
+        method: "GET",
+        path: "/index.html",
+        operationId: "redirectLegacyIndexHtml",
+        tags: ["Meta"],
+        summary: "Redirect legacy docs path to Scalar API reference",
+        responses: { 302: { description: "Redirect" } },
+        handler: async () => redirect(DOCS_PATH),
+      });
+
+      api.route({
+        method: "GET",
+        path: "/swagger/v1/swagger.json",
+        operationId: "redirectLegacySwaggerJson",
+        tags: ["Meta"],
+        summary: "Redirect legacy Swagger JSON path to OpenAPI JSON",
+        responses: { 302: { description: "Redirect" } },
+        handler: async () => redirect(OPENAPI_JSON_PATH),
+      });
+
+      api.route({
+        method: "GET",
+        path: "/swagger/v1/swagger.yaml",
+        operationId: "redirectLegacySwaggerYaml",
+        tags: ["Meta"],
+        summary: "Redirect legacy Swagger YAML path to OpenAPI YAML",
+        responses: { 302: { description: "Redirect" } },
+        handler: async () => redirect(OPENAPI_YAML_PATH),
       });
 
       api.route({
@@ -112,10 +132,11 @@ export function docsModule() {
               version: doc.info.version,
               resources: RESOURCES.length,
               endpointCount: endpointCount(doc),
-              swagger: {
-                json: "/swagger/v1/swagger.json",
-                yaml: "/swagger/v1/swagger.yaml",
-                ui: "/index.html",
+              docs: {
+                json: OPENAPI_JSON_PATH,
+                yaml: OPENAPI_YAML_PATH,
+                ui: DOCS_PATH,
+                format: "scalar",
               },
             },
           };
