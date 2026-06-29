@@ -7,6 +7,76 @@ export type FilteredRelationshipRoute = {
   foreignKey: string;
 };
 
+type NestedFromParent = {
+  parent: string;
+  field: string;
+};
+
+type NestedByForeignKey = {
+  child: string;
+  foreignKey: string;
+};
+
+export type NestedRelationshipRoute = {
+  path: `/${string}`;
+  parentResource: string;
+  tag: string;
+  operationId: string;
+  summary: string;
+  responseSchema?: string;
+} & (
+  | { kind: "fromParent"; spec: NestedFromParent }
+  | { kind: "byForeignKey"; spec: NestedByForeignKey }
+);
+
+export function operationIdForRelationshipPath(path: string, parent: string, target: string): string {
+  const tail = path.split("/").pop() ?? target.toLowerCase();
+  return `get_${parent}_${tail}`;
+}
+
+function fromParent(
+  path: `/${string}`,
+  parent: string,
+  field: string,
+  tag: string,
+  operationId: string,
+  summary: string,
+  responseSchema?: string,
+): NestedRelationshipRoute {
+  return {
+    kind: "fromParent",
+    path,
+    parentResource: parent,
+    tag,
+    operationId,
+    summary,
+    ...(responseSchema ? { responseSchema } : {}),
+    spec: { parent, field },
+  };
+}
+
+function byForeignKey(
+  path: `/${string}`,
+  parent: string,
+  child: string,
+  foreignKey: string,
+  tag: string,
+  operationId: string,
+  summary: string,
+  responseSchema?: string,
+): NestedRelationshipRoute {
+  return {
+    kind: "byForeignKey",
+    path,
+    parentResource: parent,
+    tag,
+    operationId,
+    summary,
+    ...(responseSchema ? { responseSchema } : {}),
+    spec: { child, foreignKey },
+  };
+}
+
 export const QUERYABLE_RESOURCES = new Set([
   'Products',
   'Orders',
@@ -44,6 +114,181 @@ export const QUERYABLE_RELATIONSHIP_PATHS = new Set([
   '/api/v1/Invoices/{id}/items',
   '/api/v1/SupportTickets/{id}/replies',
 ]);
+
+export const NESTED_RELATIONSHIP_ROUTES: NestedRelationshipRoute[] = [
+  fromParent(
+    '/api/v1/Books/:id/authors',
+    'Books',
+    'authors',
+    'Books',
+    'getBookAuthors',
+    'List related authors for a given book id',
+    'Author',
+  ),
+  fromParent(
+    '/api/v1/Books/:id/coverPhotos',
+    'Books',
+    'coverPhotos',
+    'Books',
+    'getBookCoverPhotos',
+    'List related cover photos for a given book id',
+    'CoverPhoto',
+  ),
+  fromParent(
+    '/api/v1/Customers/:id/orders',
+    'Customers',
+    'orders',
+    'Customers',
+    'getCustomerOrders',
+    'List related orders for a given customer id',
+  ),
+  fromParent(
+    '/api/v1/Orders/:id/items',
+    'Orders',
+    'items',
+    'Orders',
+    'getOrderItems',
+    'List related order items for a given order id',
+  ),
+  fromParent(
+    '/api/v1/Products/:id/reviews',
+    'Products',
+    'reviews',
+    'Products',
+    'getProductReviews',
+    'List related reviews for a given product id',
+  ),
+  fromParent(
+    '/api/v1/Projects/:id/tasks',
+    'Projects',
+    'tasks',
+    'Projects',
+    'getProjectTasks',
+    'List related tasks for a given project id',
+  ),
+  fromParent(
+    '/api/v1/Carts/:id/items',
+    'Carts',
+    'items',
+    'Carts',
+    'getCartItems',
+    'List related cart items for a given cart id',
+    'CartItem',
+  ),
+  fromParent(
+    '/api/v1/Wishlists/:id/items',
+    'Wishlists',
+    'items',
+    'Wishlists',
+    'getWishlistItems',
+    'List related wishlist items for a given wishlist id',
+    'WishlistItem',
+  ),
+  fromParent(
+    '/api/v1/Hotels/:id/bookings',
+    'Hotels',
+    'bookings',
+    'Hotels',
+    'getHotelBookings',
+    'List related bookings for a given hotel id',
+    'Booking',
+  ),
+  fromParent(
+    '/api/v1/Articles/:id/tags',
+    'Articles',
+    'tags',
+    'Articles',
+    'getArticleTags',
+    'List related tags for a given article id',
+    'ArticleTag',
+  ),
+  fromParent(
+    '/api/v1/Departments/:id/employees',
+    'Departments',
+    'employees',
+    'Departments',
+    'getDepartmentEmployees',
+    'List related employees for a given department id',
+    'Employee',
+  ),
+  fromParent(
+    '/api/v1/Vendors/:id/transactions',
+    'Vendors',
+    'transactions',
+    'Vendors',
+    'getVendorTransactions',
+    'List related transactions for a given vendor id',
+    'Transaction',
+  ),
+  fromParent(
+    '/api/v1/Reviews/:id/replies',
+    'Reviews',
+    'replies',
+    'Reviews',
+    'getReviewReplies',
+    'List related replies for a given review id',
+    'ReviewReply',
+  ),
+  fromParent(
+    '/api/v1/Conversations/:id/messages',
+    'Conversations',
+    'messages',
+    'Conversations',
+    'getConversationMessages',
+    'List related messages for a given conversation id',
+    'Message',
+  ),
+  byForeignKey(
+    '/api/v1/Products/:id/variants',
+    'Products',
+    'ProductVariants',
+    'productId',
+    'Products',
+    'getProductVariants',
+    'List related variants for a given product id',
+    'ProductVariant',
+  ),
+  byForeignKey(
+    '/api/v1/Products/:id/favorites',
+    'Products',
+    'Favorites',
+    'productId',
+    'Products',
+    'getProductFavorites',
+    'List related favorites for a given product id',
+    'Favorite',
+  ),
+  byForeignKey(
+    '/api/v1/Users/:id/badges',
+    'Users',
+    'UserBadges',
+    'userId',
+    'Users',
+    'getUserBadges',
+    'List related badges for a given user id',
+    'UserBadge',
+  ),
+  byForeignKey(
+    '/api/v1/Orders/:id/refunds',
+    'Orders',
+    'Refunds',
+    'orderId',
+    'Orders',
+    'getOrderRefunds',
+    'List related refunds for a given order id',
+    'Refund',
+  ),
+  byForeignKey(
+    '/api/v1/Customers/:id/reviews',
+    'Customers',
+    'Reviews',
+    'customerId',
+    'Customers',
+    'getCustomerReviews',
+    'List related reviews for a given customer id',
+    'Review',
+  ),
+];
 
 export const ADDITIONAL_RELATIONSHIP_ROUTES: FilteredRelationshipRoute[] = [
   { path: '/api/v1/Customers/{id}/carts', tag: 'Customers', summary: 'List related carts for a given customer id', parentResource: 'Customers', targetResource: 'Carts', foreignKey: 'customerId' },

@@ -1,7 +1,12 @@
 import type { App } from "@daloyjs/core";
 import { docsContentSecurityPolicy, scalarHtml } from "@daloyjs/core/docs";
 
-import { API_TITLE, buildOpenApi, endpointCount } from "../../openapi.js";
+import {
+  API_TITLE,
+  buildOpenApi,
+  endpointCount,
+  type OpenApiDocument,
+} from "../../openapi.js";
 import { RESOURCES } from "../../resources.js";
 import { yamlDump } from "../../yaml.js";
 
@@ -18,7 +23,7 @@ function redirect(location: string) {
 }
 
 export function docsModule() {
-  let cachedDoc: Record<string, unknown> | null = null;
+  let cachedDoc: OpenApiDocument | null = null;
   let cachedYaml: string | null = null;
   const getDoc = () => (cachedDoc ??= buildOpenApi());
   const getYaml = () => (cachedYaml ??= yamlDump(getDoc()));
@@ -124,7 +129,7 @@ export function docsModule() {
         summary: "Service metadata",
         responses: { 200: { description: "Success" } },
         handler: async () => {
-          const doc = getDoc() as Record<string, any>;
+          const doc = getDoc();
           return {
             status: 200 as const,
             body: {

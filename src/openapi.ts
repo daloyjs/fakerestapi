@@ -2,10 +2,41 @@
 // Schemas are inferred from the deterministic `sample(1)` of each resource.
 
 import { RESOURCES, type ResourceDef, type Sample } from './resources.js';
-import { ADDITIONAL_RELATIONSHIP_ROUTES, QUERYABLE_RELATIONSHIP_PATHS, QUERYABLE_RESOURCES } from './relationship-routes.js';
+import {
+  ADDITIONAL_RELATIONSHIP_ROUTES,
+  NESTED_RELATIONSHIP_ROUTES,
+  operationIdForRelationshipPath,
+  QUERYABLE_RELATIONSHIP_PATHS,
+  QUERYABLE_RESOURCES,
+} from './relationship-routes.js';
 import { enrichSample } from './relationships.js';
 
-type Schema = Record<string, any>;
+type Schema = Record<string, unknown>;
+type HttpVerb = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'options';
+type OpenApiParameter = Record<string, unknown>;
+type OpenApiResponse = Record<string, unknown>;
+type OpenApiOperation = {
+  tags: string[];
+  summary: string;
+  operationId: string;
+  parameters?: readonly OpenApiParameter[];
+  requestBody?: Record<string, unknown>;
+  responses: Record<string, OpenApiResponse>;
+};
+type OpenApiPathItem = Partial<Record<HttpVerb, OpenApiOperation>>;
+
+export interface OpenApiDocument {
+  openapi: '3.0.3';
+  info: {
+    title: string;
+    description: string;
+    version: string;
+    contact: { name: string; url: string };
+  };
+  tags: Array<{ name: string; description: string }>;
+  paths: Record<string, OpenApiPathItem>;
+  components: { schemas: Record<string, Schema> };
+}
 
 export const API_TITLE = 'FakeRESTApi.DaloyJS.V1';
 export const API_DESCRIPTION =
@@ -119,7 +150,7 @@ function schemaForResource(def: ResourceDef): Schema {
   return { type: 'object', additionalProperties: false, properties };
 }
 
-function pathItemFor(def: ResourceDef): { collection: any; item: any } {
+function pathItemFor(def: ResourceDef): { collection: OpenApiPathItem; item: OpenApiPathItem } {
   const tag = def.name;
   const singular = singularizeResourceName(def.name);
   const ref = `#/components/schemas/${singular}`;
@@ -128,7 +159,7 @@ function pathItemFor(def: ResourceDef): { collection: any; item: any } {
     required: true,
     content: { 'application/json': { schema: { $ref: ref } } },
   };
-  const okJson = (schema: any) => ({
+  const okJson = (schema: Schema): OpenApiResponse => ({
     description: 'Success',
     content: {
       'application/json': { schema },
@@ -147,12 +178,14 @@ function pathItemFor(def: ResourceDef): { collection: any; item: any } {
     get: {
       tags: [tag],
       summary: `List all ${tag}`,
+      operationId: `list${def.name}`,
       parameters: QUERYABLE_RESOURCES.has(def.name) ? COLLECTION_QUERY_PARAMETERS : [],
       responses: { '200': okJson(arrRef) },
     },
     post: {
       tags: [tag],
       summary: `Create a new ${singular}`,
+      operationId: `create${def.name}`,
       requestBody: reqBody,
       responses: { '200': okJson({ $ref: ref }) },
     },
@@ -162,6 +195,7 @@ function pathItemFor(def: ResourceDef): { collection: any; item: any } {
     get: {
       tags: [tag],
       summary: `Get a ${singular} by id`,
+      operationId: `get${def.name}ById`,
       parameters: [idParam],
       responses: {
         '200': okJson({ $ref: ref }),
@@ -171,6 +205,7 @@ function pathItemFor(def: ResourceDef): { collection: any; item: any } {
     put: {
       tags: [tag],
       summary: `Replace a ${singular}`,
+      operationId: `replace${def.name}`,
       parameters: [idParam],
       requestBody: reqBody,
       responses: { '200': okJson({ $ref: ref }) },
@@ -178,6 +213,7 @@ function pathItemFor(def: ResourceDef): { collection: any; item: any } {
     patch: {
       tags: [tag],
       summary: `Partially update a ${singular}`,
+      operationId: `patch${def.name}`,
       parameters: [idParam],
       requestBody: reqBody,
       responses: { '200': okJson({ $ref: ref }) },
@@ -185,6 +221,7 @@ function pathItemFor(def: ResourceDef): { collection: any; item: any } {
     delete: {
       tags: [tag],
       summary: `Delete a ${singular}`,
+      operationId: `delete${def.name}`,
       parameters: [idParam],
       responses: { '200': { description: 'Success' } },
     },
@@ -193,11 +230,15 @@ function pathItemFor(def: ResourceDef): { collection: any; item: any } {
   return { collection, item };
 }
 
-export function buildOpenApi(): Record<string, any> {
-  const paths: Record<string, any> = {};
-  const schemas: Record<string, any> = {};
+function pathToOasPath(path: string): string {
+  return path.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
+}
+
+export function buildOpenApi(): OpenApiDocument {
+  const paths: Record<string, OpenApiPathItem> = {};
+  const schemas: Record<string, Schema> = {};
   const tags: Array<{ name: string; description: string }> = [];
-  const okJson = (schema: any) => ({
+  const okJson = (schema: Schema): OpenApiResponse => ({
     description: 'Success',
     content: {
       'application/json': { schema },
@@ -217,12 +258,19 @@ export function buildOpenApi(): Record<string, any> {
   const okArr = (ref: string) => okJson({ type: 'array', items: { $ref: `#/components/schemas/${ref}` } });
   const idParam = { name: 'id', in: 'path', required: true, schema: { type: 'integer', format: 'int32' } };
   const okObjectArr = okJson({ type: 'array', items: { type: 'object' } });
-  const addRelatedPath = (path: string, tag: string, summary: string, response: any = okObjectArr) => {
+  const addRelatedPath = (
+    path: string,
+    tag: string,
+    summary: string,
+    operationId: string,
+    response: OpenApiResponse = okObjectArr,
+  ) => {
     const parameters = QUERYABLE_RELATIONSHIP_PATHS.has(path) ? [idParam, ...COLLECTION_QUERY_PARAMETERS] : [idParam];
     paths[path] = {
       get: {
         tags: [tag],
         summary,
+        operationId,
         parameters,
         responses: { '200': response, '404': { description: 'Not Found' } },
       },
@@ -233,6 +281,7 @@ export function buildOpenApi(): Record<string, any> {
     get: {
       tags: ['Authors'],
       summary: 'List authors for a given book id',
+      operationId: 'getAuthorsForBook',
       parameters: [{ name: 'idBook', in: 'path', required: true, schema: { type: 'integer', format: 'int32' } }],
       responses: { '200': okArr('Author') },
     },
@@ -241,32 +290,30 @@ export function buildOpenApi(): Record<string, any> {
     get: {
       tags: ['CoverPhotos'],
       summary: 'List cover photos for a given book id',
+      operationId: 'getCoverPhotosForBook',
       parameters: [{ name: 'idBook', in: 'path', required: true, schema: { type: 'integer', format: 'int32' } }],
       responses: { '200': okArr('CoverPhoto') },
     },
   };
-  addRelatedPath('/api/v1/Books/{id}/authors', 'Books', 'List related authors for a given book id', okArr('Author'));
-  addRelatedPath('/api/v1/Books/{id}/coverPhotos', 'Books', 'List related cover photos for a given book id', okArr('CoverPhoto'));
-  addRelatedPath('/api/v1/Customers/{id}/orders', 'Customers', 'List related orders for a given customer id');
-  addRelatedPath('/api/v1/Customers/{id}/reviews', 'Customers', 'List related reviews for a given customer id', okArr('Review'));
-  addRelatedPath('/api/v1/Orders/{id}/items', 'Orders', 'List related order items for a given order id');
-  addRelatedPath('/api/v1/Orders/{id}/refunds', 'Orders', 'List related refunds for a given order id', okArr('Refund'));
-  addRelatedPath('/api/v1/Products/{id}/reviews', 'Products', 'List related reviews for a given product id');
-  addRelatedPath('/api/v1/Products/{id}/variants', 'Products', 'List related variants for a given product id', okArr('ProductVariant'));
-  addRelatedPath('/api/v1/Products/{id}/favorites', 'Products', 'List related favorites for a given product id', okArr('Favorite'));
-  addRelatedPath('/api/v1/Projects/{id}/tasks', 'Projects', 'List related tasks for a given project id');
-  addRelatedPath('/api/v1/Carts/{id}/items', 'Carts', 'List related cart items for a given cart id', okArr('CartItem'));
-  addRelatedPath('/api/v1/Wishlists/{id}/items', 'Wishlists', 'List related wishlist items for a given wishlist id', okArr('WishlistItem'));
-  addRelatedPath('/api/v1/Users/{id}/badges', 'Users', 'List related badges for a given user id', okArr('UserBadge'));
-  addRelatedPath('/api/v1/Hotels/{id}/bookings', 'Hotels', 'List related bookings for a given hotel id', okArr('Booking'));
-  addRelatedPath('/api/v1/Articles/{id}/tags', 'Articles', 'List related tags for a given article id', okArr('ArticleTag'));
-  addRelatedPath('/api/v1/Departments/{id}/employees', 'Departments', 'List related employees for a given department id', okArr('Employee'));
-  addRelatedPath('/api/v1/Vendors/{id}/transactions', 'Vendors', 'List related transactions for a given vendor id', okArr('Transaction'));
-  addRelatedPath('/api/v1/Reviews/{id}/replies', 'Reviews', 'List related replies for a given review id', okArr('ReviewReply'));
-  addRelatedPath('/api/v1/Conversations/{id}/messages', 'Conversations', 'List related messages for a given conversation id', okArr('Message'));
+
+  for (const route of NESTED_RELATIONSHIP_ROUTES) {
+    addRelatedPath(
+      pathToOasPath(route.path),
+      route.tag,
+      route.summary,
+      route.operationId,
+      route.responseSchema ? okArr(route.responseSchema) : okObjectArr,
+    );
+  }
 
   for (const route of ADDITIONAL_RELATIONSHIP_ROUTES) {
-    addRelatedPath(route.path, route.tag, route.summary, okObjectArr);
+    addRelatedPath(
+      route.path,
+      route.tag,
+      route.summary,
+      operationIdForRelationshipPath(route.path, route.parentResource, route.targetResource),
+      okObjectArr,
+    );
   }
 
   return {
@@ -283,13 +330,12 @@ export function buildOpenApi(): Record<string, any> {
   };
 }
 
-export function endpointCount(doc: Record<string, any>): number {
+export function endpointCount(doc: Pick<OpenApiDocument, 'paths'>): number {
   let total = 0;
-  for (const item of Object.values(doc.paths as Record<string, any>)) {
+  for (const item of Object.values(doc.paths)) {
     for (const k of Object.keys(item)) {
       if (['get', 'post', 'put', 'patch', 'delete', 'head', 'options'].includes(k)) total++;
     }
   }
   return total;
 }
-

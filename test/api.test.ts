@@ -88,6 +88,21 @@ test('buildApp still boots in production with the public CORS policy', () => {
   assert.doesNotThrow(() => buildApp({ env: 'production' }));
 });
 
+test('production app accepts Vercel forwarded headers with an explicit proxy posture', async () => {
+  const productionApp = buildApp({ env: 'production' });
+  const response = await Promise.resolve(productionApp.request('/api/v1/_meta', {
+    headers: {
+      'X-Forwarded-For': '203.0.113.10',
+      'X-Forwarded-Host': 'fakerestapi.vercel.app',
+      'X-Forwarded-Proto': 'https',
+    },
+  }));
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.title, API_TITLE);
+});
+
 test('all resources expose collection and item GET endpoints', async (t) => {
   for (const resource of RESOURCES) {
     await t.test(resource.name, async () => {
@@ -370,6 +385,38 @@ test('openapi json exposes the generated API surface including relationship path
   assert.ok(swagger.components.schemas.Order.properties.items);
   assert.ok(swagger.components.schemas.Customer.properties.paymentMethods);
   assert.ok(swagger.components.schemas.Invoice.properties.payments);
+});
+
+test('openapi operation ids stay aligned with registered API routes', async () => {
+  const swagger = await requestJson('/openapi.json');
+  const routeMethods = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+  const seenOperationIds = new Set<string>();
+  const toOpenApiPath = (path: string) =>
+    path.replace(/\/$/, '').replace(/:([A-Za-z0-9_]+)/g, '{$1}');
+
+  for (const [path, pathItem] of Object.entries(swagger.paths)) {
+    for (const method of ['get', 'post', 'put', 'patch', 'delete']) {
+      const operation = (pathItem as Record<string, { operationId?: unknown } | undefined>)[method];
+      if (!operation) continue;
+
+      assert.equal(typeof operation.operationId, 'string', `${method.toUpperCase()} ${path}`);
+      const operationId = operation.operationId;
+      assert.ok(typeof operationId === 'string');
+      assert.ok(!seenOperationIds.has(operationId), operationId);
+      seenOperationIds.add(operationId);
+    }
+  }
+
+  for (const route of app.routes) {
+    if (!route.path.startsWith('/api/v1/') || route.path === '/api/v1/_meta') continue;
+    if (!routeMethods.has(route.method)) continue;
+
+    const path = toOpenApiPath(route.path);
+    const method = route.method.toLowerCase();
+    const operation = swagger.paths[path]?.[method];
+    assert.ok(operation, `${route.method} ${path} is missing from OpenAPI`);
+    assert.equal(operation.operationId, route.operationId, `${route.method} ${path}`);
+  }
 });
 
 test('expanded relationship endpoints are functional across domains', async () => {
