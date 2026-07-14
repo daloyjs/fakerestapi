@@ -81,7 +81,8 @@ Mutations are **not persisted**; every GET is deterministic.
 ## Why this matters
 
 The port keeps every test from the Daloy version *unchanged*. The only thing
-that moved is the framework: routes are now defined with `app.route({ ... })`,
-plugins are registered with `app.register(..., { prefix, tags })`, and 404s
-flow through `NotFoundError` so they automatically render as RFC 9457
-problem+json with the configured request id stamped on every response.
+that moved is the framework: routes are now defined with the method shorthands
+(`app.get(path, contract, handler)`, `app.post(...)`, …), plugins are
+registered with `app.register(..., { prefix, tags })`, and 404s flow through
+`NotFoundError` so they automatically render as RFC 9457 problem+json with the
+configured request id stamped on every response.

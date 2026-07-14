@@ -16,28 +16,30 @@ function resourcePlugin(def: ResourceDef): { name: string; register: (app: App) 
     register(api) {
       const queryable = QUERYABLE_RESOURCES.has(def.name);
 
-      api.route({
-        method: "GET",
-        path: "/",
-        operationId: `list${def.name}`,
-        summary: `List all ${def.name}`,
-        responses: { 200: { description: "Success" } },
-        handler: async ({ request, set }) => {
+      api.get(
+        "/",
+        {
+          operationId: `list${def.name}`,
+          summary: `List all ${def.name}`,
+          responses: { 200: { description: "Success" } },
+        },
+        async ({ request, set }) => {
           const items = listFor(def);
           const body = queryable
             ? collectionResponse(set.headers, request.url, items)
             : items;
           return { status: 200 as const, body };
         },
-      });
+      );
 
-      api.route({
-        method: "POST",
-        path: "/",
-        operationId: `create${def.name}`,
-        summary: `Create a new ${def.name}`,
-        responses: { 200: { description: "Success" } },
-        handler: async ({ request }) => {
+      api.post(
+        "/",
+        {
+          operationId: `create${def.name}`,
+          summary: `Create a new ${def.name}`,
+          responses: { 200: { description: "Success" } },
+        },
+        async ({ request }) => {
           const body = await readJsonBody(request);
           return {
             status: 200 as const,
@@ -47,31 +49,33 @@ function resourcePlugin(def: ResourceDef): { name: string; register: (app: App) 
             }),
           };
         },
-      });
+      );
 
-      api.route({
-        method: "GET",
-        path: "/:id",
-        operationId: `get${def.name}ById`,
-        summary: `Get a ${def.name} by id`,
-        responses: {
-          200: { description: "Success" },
-          404: { description: "Not Found" },
+      api.get(
+        "/:id",
+        {
+          operationId: `get${def.name}ById`,
+          summary: `Get a ${def.name} by id`,
+          responses: {
+            200: { description: "Success" },
+            404: { description: "Not Found" },
+          },
         },
-        handler: async ({ params }) => {
+        async ({ params }) => {
           const item = getById(def, Number((params as { id: string }).id));
           if (!item) return notFoundJson();
           return { status: 200 as const, body: item };
         },
-      });
+      );
 
-      api.route({
-        method: "PUT",
-        path: "/:id",
-        operationId: `replace${def.name}`,
-        summary: `Replace a ${def.name}`,
-        responses: { 200: { description: "Success" } },
-        handler: async ({ params, request }) => {
+      api.put(
+        "/:id",
+        {
+          operationId: `replace${def.name}`,
+          summary: `Replace a ${def.name}`,
+          responses: { 200: { description: "Success" } },
+        },
+        async ({ params, request }) => {
           const id = Number((params as { id: string }).id);
           const body = await readJsonBody(request);
           return {
@@ -79,15 +83,16 @@ function resourcePlugin(def: ResourceDef): { name: string; register: (app: App) 
             body: enrichSample(def.name, { ...body, id }),
           };
         },
-      });
+      );
 
-      api.route({
-        method: "PATCH",
-        path: "/:id",
-        operationId: `patch${def.name}`,
-        summary: `Partially update a ${def.name}`,
-        responses: { 200: { description: "Success" } },
-        handler: async ({ params, request }) => {
+      api.patch(
+        "/:id",
+        {
+          operationId: `patch${def.name}`,
+          summary: `Partially update a ${def.name}`,
+          responses: { 200: { description: "Success" } },
+        },
+        async ({ params, request }) => {
           const id = Number((params as { id: string }).id);
           const body = await readJsonBody(request);
           const baseObj = def.sample(id) ?? {};
@@ -96,20 +101,21 @@ function resourcePlugin(def: ResourceDef): { name: string; register: (app: App) 
             body: enrichSample(def.name, { ...baseObj, ...body, id }),
           };
         },
-      });
+      );
 
-      api.route({
-        method: "DELETE",
-        path: "/:id",
-        operationId: `delete${def.name}`,
-        summary: `Delete a ${def.name}`,
-        responses: { 200: { description: "Success" } },
-        handler: async () => ({
+      api.delete(
+        "/:id",
+        {
+          operationId: `delete${def.name}`,
+          summary: `Delete a ${def.name}`,
+          responses: { 200: { description: "Success" } },
+        },
+        async () => ({
           status: 200 as const,
           body: null,
           headers: { "x-remove-content-type": "1" },
         }),
-      });
+      );
     },
   };
 }

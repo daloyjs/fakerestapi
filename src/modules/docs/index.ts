@@ -31,24 +31,26 @@ export function docsModule() {
   return {
     name: "docs",
     register(api: App) {
-      api.route({
-        method: "GET",
-        path: OPENAPI_JSON_PATH,
-        operationId: "getOpenApiJson",
-        tags: ["Meta"],
-        summary: "OpenAPI 3 specification",
-        responses: { 200: { description: "Success" } },
-        handler: async () => ({ status: 200 as const, body: getDoc() }),
-      });
+      api.get(
+        OPENAPI_JSON_PATH,
+        {
+          operationId: "getOpenApiJson",
+          tags: ["Meta"],
+          summary: "OpenAPI 3 specification",
+          responses: { 200: { description: "Success" } },
+        },
+        async () => ({ status: 200 as const, body: getDoc() }),
+      );
 
-      api.route({
-        method: "GET",
-        path: OPENAPI_YAML_PATH,
-        operationId: "getOpenApiYaml",
-        tags: ["Meta"],
-        summary: "OpenAPI 3 specification (YAML)",
-        responses: { 200: { description: "Success" } },
-        handler: async () => ({
+      api.get(
+        OPENAPI_YAML_PATH,
+        {
+          operationId: "getOpenApiYaml",
+          tags: ["Meta"],
+          summary: "OpenAPI 3 specification (YAML)",
+          responses: { 200: { description: "Success" } },
+        },
+        async () => ({
           status: 200 as const,
           body: getYaml(),
           headers: {
@@ -57,16 +59,17 @@ export function docsModule() {
             "x-content-type-options": "nosniff",
           },
         }),
-      });
+      );
 
-      api.route({
-        method: "GET",
-        path: DOCS_PATH,
-        operationId: "getScalarDocs",
-        tags: ["Meta"],
-        summary: "Scalar API reference",
-        responses: { 200: { description: "Success" } },
-        handler: async () => ({
+      api.get(
+        DOCS_PATH,
+        {
+          operationId: "getScalarDocs",
+          tags: ["Meta"],
+          summary: "Scalar API reference",
+          responses: { 200: { description: "Success" } },
+        },
+        async () => ({
           status: 200 as const,
           body: scalarHtml({
             specUrl: OPENAPI_JSON_PATH,
@@ -79,56 +82,61 @@ export function docsModule() {
             "referrer-policy": "no-referrer",
           },
         }),
-      });
+      );
 
-      api.route({
-        method: "GET",
-        path: "/",
-        operationId: "redirectToDocs",
-        tags: ["Meta"],
-        summary: "Redirect to Scalar API reference",
-        responses: { 302: { description: "Redirect" } },
-        handler: async () => redirect(DOCS_PATH),
-      });
+      api.get(
+        "/",
+        {
+          operationId: "redirectToDocs",
+          tags: ["Meta"],
+          summary: "Redirect to Scalar API reference",
+          responses: { 302: { description: "Redirect" } },
+        },
+        async () => redirect(DOCS_PATH),
+      );
 
-      api.route({
-        method: "GET",
-        path: "/index.html",
-        operationId: "redirectLegacyIndexHtml",
-        tags: ["Meta"],
-        summary: "Redirect legacy docs path to Scalar API reference",
-        responses: { 302: { description: "Redirect" } },
-        handler: async () => redirect(DOCS_PATH),
-      });
+      api.get(
+        "/index.html",
+        {
+          operationId: "redirectLegacyIndexHtml",
+          tags: ["Meta"],
+          summary: "Redirect legacy docs path to Scalar API reference",
+          responses: { 302: { description: "Redirect" } },
+        },
+        async () => redirect(DOCS_PATH),
+      );
 
-      api.route({
-        method: "GET",
-        path: "/swagger/v1/swagger.json",
-        operationId: "redirectLegacySwaggerJson",
-        tags: ["Meta"],
-        summary: "Redirect legacy Swagger JSON path to OpenAPI JSON",
-        responses: { 302: { description: "Redirect" } },
-        handler: async () => redirect(OPENAPI_JSON_PATH),
-      });
+      api.get(
+        "/swagger/v1/swagger.json",
+        {
+          operationId: "redirectLegacySwaggerJson",
+          tags: ["Meta"],
+          summary: "Redirect legacy Swagger JSON path to OpenAPI JSON",
+          responses: { 302: { description: "Redirect" } },
+        },
+        async () => redirect(OPENAPI_JSON_PATH),
+      );
 
-      api.route({
-        method: "GET",
-        path: "/swagger/v1/swagger.yaml",
-        operationId: "redirectLegacySwaggerYaml",
-        tags: ["Meta"],
-        summary: "Redirect legacy Swagger YAML path to OpenAPI YAML",
-        responses: { 302: { description: "Redirect" } },
-        handler: async () => redirect(OPENAPI_YAML_PATH),
-      });
+      api.get(
+        "/swagger/v1/swagger.yaml",
+        {
+          operationId: "redirectLegacySwaggerYaml",
+          tags: ["Meta"],
+          summary: "Redirect legacy Swagger YAML path to OpenAPI YAML",
+          responses: { 302: { description: "Redirect" } },
+        },
+        async () => redirect(OPENAPI_YAML_PATH),
+      );
 
-      api.route({
-        method: "GET",
-        path: "/api/v1/_meta",
-        operationId: "getMeta",
-        tags: ["Meta"],
-        summary: "Service metadata",
-        responses: { 200: { description: "Success" } },
-        handler: async () => {
+      api.get(
+        "/api/v1/_meta",
+        {
+          operationId: "getMeta",
+          tags: ["Meta"],
+          summary: "Service metadata",
+          responses: { 200: { description: "Success" } },
+        },
+        async () => {
           const doc = getDoc();
           return {
             status: 200 as const,
@@ -146,7 +154,7 @@ export function docsModule() {
             },
           };
         },
-      });
+      );
     },
   };
 }

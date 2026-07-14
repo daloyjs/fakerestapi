@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@daloyjs/core':
-        specifier: ^1.0.0-beta.4
-        version: 1.0.0-beta.4
+        specifier: ^1.0.0-rc.4
+        version: 1.0.0-rc.4
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -30,9 +30,9 @@ importers:
 
 packages:
 
-  '@daloyjs/core@1.0.0-beta.4':
-    resolution: {integrity: sha512-lSaTD3uBICMQDWFjkcZ1Yh/uIMdVvqjqJ97obSkAQl9GLer+Y/crHxY92qZedBeGvSQbMTRkRKDgIziWCGX+VA==}
-    engines: {node: '>=24.0.0', pnpm: '>=11.0.0'}
+  '@daloyjs/core@1.0.0-rc.4':
+    resolution: {integrity: sha512-84jdhQwj3O7A0+aTLc5JMsWCa3P4ZKbyCtEBhdb1EUGkQh2Tj3RroUsQehSPvaa5CnnPTTf964EarBKGFohzvA==}
+    engines: {node: ^24.0.0 || >=26.0.0, pnpm: '>=11.0.0'}
     hasBin: true
 
   '@esbuild/aix-ppc64@0.28.0':
@@ -227,7 +227,7 @@ packages:
 
 snapshots:
 
-  '@daloyjs/core@1.0.0-beta.4': {}
+  '@daloyjs/core@1.0.0-rc.4': {}
 
   '@esbuild/aix-ppc64@0.28.0':
     optional: true
