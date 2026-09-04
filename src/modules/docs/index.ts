@@ -74,6 +74,7 @@ export function docsModule() {
           body: scalarHtml({
             specUrl: OPENAPI_JSON_PATH,
             title: `${API_TITLE} - API Reference`,
+            configuration: { withDefaultFonts: false },
           }),
           headers: {
             "content-type": "text/html; charset=utf-8",

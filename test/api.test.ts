@@ -42,6 +42,7 @@ test('root redirects to Scalar docs and /docs serves the API reference shell', a
   assert.equal(ui.status, 200);
   assert.match(html, /api-reference/);
   assert.match(html, /openapi\.json/);
+  assert.match(html, /withDefaultFonts&quot;:false/);
 });
 
 test('legacy Swagger paths redirect to the canonical Scalar and OpenAPI routes', async () => {
