@@ -11,17 +11,17 @@
     "dev": "tsx watch scripts/serve.ts",
     "start": "tsx scripts/serve.ts",
     "smoke": "tsx scripts/smoke.ts",
-    "test": "node --import tsx --test 'test/**/*.test.ts'",
+    "test": "node --import tsx --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@daloyjs/core": "^1.0.0-rc.4",
-    "zod": "^4.4.3"
+    "@daloyjs/core": "^1.3.1",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
-    "tsx": "^4.22.4",
-    "typescript": "^6.0.3",
+    "@types/node": "^26.4.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
     "yaml": "^2.9.0"
   }
 }
