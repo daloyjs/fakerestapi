@@ -58,7 +58,7 @@ export function buildApp(options: { env?: "development" | "production" | "test" 
       // literal wildcard CORS policy in production. Echo any concrete Origin
       // instead so the app still works cross-origin without disabling secure
       // defaults globally.
-      origin: allowAnyOrigin,
+      origin: "http://localhost:5173",
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       exposedHeaders: ["X-Total-Count", "X-Page", "X-Limit", "X-Offset"],
