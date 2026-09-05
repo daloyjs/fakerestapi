@@ -10,17 +10,11 @@ import { App, cors } from "@daloyjs/core";
 
 import { API_TITLE } from "./openapi.js";
 import { registerModules } from "./platform/modules.js";
-import {
-  CORS_ALLOW_HEADERS,
-  CORS_ALLOW_METHODS,
-  CORS_EXPOSE_HEADERS,
-} from "./shared/http.js";
+import { CORS_EXPOSE_HEADERS } from "./shared/http.js";
 
+// Public demo API: echo any concrete Origin. A literal `origin: "*"` is
+// refused at boot in production (https://daloyjs.dev/docs/security/boot-guards).
 const allowAnyOrigin = (_origin: string): boolean => true;
-
-function responseCorsOrigin(origin: string | null): string {
-  return origin ?? "*";
-}
 
 export function buildApp(options: { env?: "development" | "production" | "test" } = {}): App {
   const app = new App({
@@ -32,6 +26,11 @@ export function buildApp(options: { env?: "development" | "production" | "test" 
     requestTimeoutMs: 30_000,
     validateResponses: true,
     logger: process.env.DALOY_LOG === "1" ? undefined : false,
+    // Default CORP is `same-origin`, which blocks browser clients on other
+    // origins even after CORS succeeds. This API is meant to be called from
+    // workshops and demos, so opt the auto-installed headers into
+    // `cross-origin` (https://daloyjs.dev/docs/security).
+    secureHeaders: { crossOriginResourcePolicy: "cross-origin" },
     hooks: {
       onError(error) {
         if (error instanceof Error && error.name === "NotFoundError") {
@@ -54,26 +53,16 @@ export function buildApp(options: { env?: "development" | "production" | "test" 
 
   app.use(
     cors({
-      // The demo is intentionally public, but the latest core now blocks a
-      // literal wildcard CORS policy in production. Echo any concrete Origin
-      // instead so the app still works cross-origin without disabling secure
-      // defaults globally.
-      origin: "http://localhost:5173",
+      origin: allowAnyOrigin,
+      credentials: false,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
+      allowedHeaders: ["Content-Type", "Authorization", "Accept"],
       exposedHeaders: ["X-Total-Count", "X-Page", "X-Limit", "X-Offset"],
       maxAgeSeconds: 86400,
     }),
   );
 
   app.use({
-    beforeHandle(ctx) {
-      const origin = ctx.request.headers.get("origin");
-      ctx.set.headers.set("access-control-allow-origin", responseCorsOrigin(origin));
-      ctx.set.headers.set("access-control-expose-headers", CORS_EXPOSE_HEADERS);
-      if (origin) ctx.set.headers.set("vary", "Origin");
-      return undefined;
-    },
     onResponse(response) {
       response.headers.delete("x-request-id");
       if (!response.headers.has("access-control-allow-origin")) {
@@ -81,17 +70,6 @@ export function buildApp(options: { env?: "development" | "production" | "test" 
       }
       if (!response.headers.has("access-control-expose-headers")) {
         response.headers.set("access-control-expose-headers", CORS_EXPOSE_HEADERS);
-      }
-      if (response.status === 204 && response.headers.has("access-control-allow-methods")) {
-        response.headers.set("access-control-allow-methods", CORS_ALLOW_METHODS);
-        response.headers.set("access-control-allow-headers", CORS_ALLOW_HEADERS);
-        const vary = response.headers.get("vary");
-        response.headers.set(
-          "vary",
-          vary && vary.length > 0
-            ? `${vary}, Access-Control-Request-Headers`
-            : "Access-Control-Request-Headers",
-        );
       }
     },
   });

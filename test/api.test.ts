@@ -67,6 +67,7 @@ test('api responses include browser CORS headers', async () => {
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
   assert.match(response.headers.get('access-control-expose-headers') ?? '', /X-Total-Count/);
+  assert.equal(response.headers.get('cross-origin-resource-policy'), 'cross-origin');
 });
 
 test('api supports CORS preflight requests', async () => {
@@ -83,6 +84,35 @@ test('api supports CORS preflight requests', async () => {
   assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
   assert.match(response.headers.get('access-control-allow-methods') ?? '', /GET/);
   assert.match(response.headers.get('access-control-allow-headers') ?? '', /Content-Type/);
+});
+
+test('api supports DELETE CORS preflight without redirecting', async () => {
+  const response = await request('/api/v1/Books/5', {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'http://localhost:5173',
+      'Access-Control-Request-Method': 'DELETE',
+      'Access-Control-Request-Headers': 'Content-Type',
+    },
+  });
+
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get('location'), null);
+  assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+  assert.match(response.headers.get('access-control-allow-methods') ?? '', /DELETE/);
+});
+
+test('public CORS policy echoes any concrete Origin', async () => {
+  const response = await request('/api/v1/Books/5', {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'http://127.0.0.1:5173',
+      'Access-Control-Request-Method': 'DELETE',
+    },
+  });
+
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get('access-control-allow-origin'), 'http://127.0.0.1:5173');
 });
 
 test('buildApp still boots in production with the public CORS policy', () => {
